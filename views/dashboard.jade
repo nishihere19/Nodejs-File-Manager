@@ -1,0 +1,24 @@
+extends layout
+append links 
+    ul(style="float: right;")
+        form(action="/search", method="post")
+            input(type="text", name="Searchval", placeholder="Search Files/Folders")
+            input(type="submit", name="Search", value="Search")
+            a(href="/Files") Files
+            a(href="/Folders")  Folders
+            a(href="/loggout") Logout
+
+
+block main-content
+  h1 #{title}
+  p #{message}
+  form(method="post" enctype="multipart/form-data" action="/uploadFile")
+    input(type="file", name="myFile")
+    input(type="submit", value="Upload")
+  form(method="post" enctype="multipart/form-data" action="/uploadFolder")
+    input(type="text", name="nameOfFolder", placeholder="Folder Name")
+    input(type="file", name="myFiles" multiple)
+    input(type="submit", value="Upload")
+
+    
+

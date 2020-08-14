@@ -1,0 +1,10 @@
+extends dashboard
+block content
+    mixin
+        table
+            each item in result
+                tr
+                    td 
+                        span #{item.originalname}
+                        a(href="FilesView/"+item._id) View Files
+                        a(href="DeleteFolder/"+item._id) Delete Folder

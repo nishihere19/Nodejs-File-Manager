@@ -1,0 +1,20 @@
+extends dashboard
+block content
+    mixin
+        h2 Folders
+        table
+            each item in result
+                tr
+                    td 
+                        span #{item.originalname}
+                        a(href="FilesView/"+item._id) View Files
+                        a(href="DeleteFolder/"+item._id) Delete Folder
+        h2 Files
+        table
+            each item in result1
+                tr
+                    td 
+                        span #{item.originalname}
+                        a(href="Files/"+item._id) Download
+                        a(href="DeleteFile/"+item._id) Delete
+                        

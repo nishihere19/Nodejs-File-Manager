@@ -1,0 +1,12 @@
+extends dashboard
+block content
+    mixin
+        table
+            each item in result
+                tr
+                    td 
+                        span #{item.originalname}
+                        a(href="Files/"+item._id) Download
+                        a(href="DeleteFile/"+item._id) Delete
+                        //div hi
+                       

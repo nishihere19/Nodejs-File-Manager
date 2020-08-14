@@ -1,0 +1,20 @@
+extends index
+
+block form
+	form(method="post", id="registerform", action="/register")
+		p
+			label Username
+			input(type='text', id='username', name='username')
+		p
+			label Password
+			input(type='password', id="password", name='password')
+		p
+			label First Name
+			input(type='text', id='firstname', name='firstname')
+		p
+			label lastname
+			input(type='text', id='lastname', name='lastname')
+		p
+			input(type='Submit')
+
+	

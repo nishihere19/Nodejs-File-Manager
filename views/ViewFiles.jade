@@ -1,0 +1,11 @@
+extends dashboard
+block content
+    mixin
+        table
+            each item in result1
+                tr
+                    td
+                        if item.originalname
+                            span=item.originalname
+                            a(href="Files/"+item.filename) Download
+                            a(href="DeleteFile/"+item.filename+'/'+id) Delete
