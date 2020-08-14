@@ -12,7 +12,6 @@ Delete files
 Delete folders
 Search files and folders(case insensitive)
 
-Screenshots
 
 
 
