@@ -5,6 +5,8 @@ npm install
 
 Features:
 Registration and Login
+Password Reset
+Delete Account
 Upload Files
 Create Folders and add files
 View files and folders
@@ -12,7 +14,6 @@ Delete files
 Delete folders
 Search files and folders(case insensitive)
 
-Screenshots
 
 
 
