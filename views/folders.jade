@@ -5,6 +5,6 @@ block content
             each item in result
                 tr
                     td 
-                        span #{item.originalname}
-                        a(href="FilesView/"+item._id) View Files
-                        a(href="DeleteFolder/"+item._id) Delete Folder
+                        span 
+                        a(href="FilesView/"+item._id style="float: left; font-weight: bold;") #{item.originalname}
+                        a(href="DeleteFolder/"+item._id style="float: right; font-weight: bold;") Delete Folder

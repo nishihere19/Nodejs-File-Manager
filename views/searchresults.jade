@@ -1,20 +1,20 @@
 extends dashboard
 block content
     mixin
-        h2 Folders
         table
+            if result.length
+              h2(style="float: left;") Folders
             each item in result
                 tr
                     td 
-                        span #{item.originalname}
-                        a(href="FilesView/"+item._id) View Files
-                        a(href="DeleteFolder/"+item._id) Delete Folder
-        h2 Files
+                        a(href="FilesView/"+item._id style="float: left; font-weight: bold;") #{item.originalname}
+                        a(href="DeleteFolder/"+item._id style="float: right; font-weight: bold;") Delete Folder
         table
+            if result1.length
+              h2(style="float: left;") Files
             each item in result1
                 tr
                     td 
-                        span #{item.originalname}
-                        a(href="Files/"+item._id) Download
-                        a(href="DeleteFile/"+item._id) Delete
+                        a(href="Files/"+item._id style="float: left; font-weight: bold;") #{item.originalname}
+                        a(href="DeleteFile/"+item._id style="float: right; font-weight: bold;") Delete File
                         

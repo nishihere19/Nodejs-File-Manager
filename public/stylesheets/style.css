@@ -1,27 +1,28 @@
+*
+{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
 body {
   padding: none;
+  margin: 0;
   font-family: 'Courier New', Courier, monospace;
+  background-size: cover;
+  background-position: center;
+  background-image: url(../Sources/oliver-pecker-HONJP8DyiSM-unsplash.jpg);
   background-color: rgb(10,10,10);
   color: rgb(206, 197, 197);
   font-size: 1.5rem;
-}
-nav{
- margin-right: 0mm;
-  margin-left: 0mm;
-  margin-top: 0mm;
-}
-ul{
-  padding-left: 0mm;
-  margin-left: 0mm;
-  padding-top: 0mm;
-  margin-top: 0mm;
+  text-align: center;
 }
 
+
 a {
-  padding: 10px;
+  
   color: #00B7FF;
-  background-color: rgb(49, 48, 48);
-  height: 100px;
+ 
+  text-decoration: none;
 }
 a:hover{
   color: aqua;
@@ -32,16 +33,16 @@ input[type="submit"]:hover{
   background-color: rgb(64, 122, 141);
 }
 input[type="submit"]{
-  color: rgb(32, 31, 31);
+  color: rgb(236, 228, 228);
   background-color: #00B7FF;
-  height: 40px;
+  height: 30px;
   width: 100px;
   font-family: 'Courier New', Courier, monospace;
   font-size: 1.2rem;
   font-weight: bold;
 }
 input[type="text"]{
-  height: 20px;
+  height: 25px;
   background-color: rgb(214, 206, 206);
 }
 input[type="search"]{
@@ -51,20 +52,85 @@ input[type="search"]{
   background-color: rgb(214, 206, 206);
 }
 input[type="password"]{
-  height: 20px;
+  height: 25px;
   background-color: rgb(214, 206, 206);
 }
 input[type="text"]:hover{
-  height: 20px;
+ 
   background-color: rgb(255, 253, 253);
 }
 input[type="password"]:hover{
-  height: 20px;
+  
   background-color: rgb(255, 255, 255);
 }
 span{
   color: white;
 }
-table tr{
-  height: 50px;
+
+.nav{
+
+  background-color: rgb(61, 58, 58);
+  
+  text-align: center;
+  height: 30px;
+}
+.nav ul{
+  display: inline-flex;
+  list-style: none;
+ 
+  
+}
+.main-menu ul li{
+ width: 120px;
+ margin: 5px;
+ 
+  
+}
+.nav ul li a{
+  margin-left:0;
+  padding-left: 50px;
+  padding-right: 50px;
+  
+  
+}
+
+
+
+.nav ul li .submenu{
+  display: none;
+}
+table{
+  width: 100%;
+}
+.nav ul li:hover{
+  display: block;
+  
+
+
+}
+.nav ul li:hover .submenu{
+  display: block;
+ position: absolute;
+
+  
+  background-color:  rgb(51, 49, 49);
+}
+.nav ul li:hover .submenu li{
+ 
+ width: inherit;
+  display: block;
+
+ 
+  border-bottom: 1px dotted white;
+  border-radius: 0;
+  text-align: center;
+}
+.nav ul li:hover .submenu .last{
+  border-bottom: none;
+}
+.nav ul li:hover .submenu:hover{
+  display: block;
+}
+.nav ul li:hover .submenu li a{
+  width: inherit;
 }

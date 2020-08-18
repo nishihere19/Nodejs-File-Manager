@@ -1,8 +1,13 @@
 extends layout
-
+.nav
+  block nav
+      ul.main-menu
+        li
+          a(href='loginform') Login
+        li
+          a(href='registerform') Register
+  
 block content
-  h1= title
-  p #{title}
-  p: #[a(href="loginform" ) Login]
-  p: #[a(href="registerform") Register]
+  h1.title= title
+  p(style="color: red;") #{msg}
   block form

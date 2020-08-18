@@ -5,8 +5,7 @@ block content
             each item in result
                 tr
                     td 
-                        span #{item.originalname}
-                        a(href="Files/"+item._id) Download
-                        a(href="DeleteFile/"+item._id) Delete
+                        a(href="Files/"+item._id style="float: left; font-weight: bold;") #{item.originalname}
+                        a(href="DeleteFile/"+item._id style="float: right; font-weight: bold;") Delete
                         //div hi
                        

@@ -6,6 +6,5 @@ block content
                 tr
                     td
                         if item.originalname
-                            span=item.originalname
-                            a(href="Files/"+item.filename) Download
-                            a(href="DeleteFile/"+item.filename+'/'+id) Delete
+                            a(href="Files/"+item.filename style="float: left; font-weight: bold;") #{item.originalname}
+                            a(href="DeleteFile/"+item.filename+'/'+id style="float: right; font-weight: bold;") Delete

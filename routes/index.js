@@ -6,6 +6,7 @@ var multer= require('multer');
 const Folder = require('../lib/folders');
 const user=new User;
 const bcrypt=require('bcrypt');
+const folders = require('../lib/folders');
 
 var upload = multer({
 	dest:'./uploads'
@@ -19,7 +20,7 @@ router.get('/', function(req, res, next) {
 		res.render('dashboard',{ title: 'Welcome to your File Manager!!', message: "LoggedIn Successfully as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+")."});
 	}
 	else{
-		res.render('index', { title: 'Welcome to your File Manager!!' });
+		res.render('index', { title: 'Welcome to your File Manager!!',msg:'' });
 	}
 	
 });
@@ -162,33 +163,13 @@ router.post('/login', function(req, res){
 		}
 
 		if(!foundUser){
-			return res.status(404).send("User not found");
+			res.render("loginform",{title:"Welcome to your file manager!",msg: "Username or password incorrect!"})
+		return;
 		}
 		req.session.user = foundUser;
 		//console.log(req.session.user);
-	File.find({username: foundUser.username},"originalname",function(err,result){
-		if(err){
-			console.log('Error in finding files');
-			//return res.status(500).send("Can't Find Your Files!");
-		}
-		//console.log(result);
-		if(result){
-			result.forEach(function(err,result1){
-				if(err){
-					console.log(err);
-				}
-				if(result1){
-					//console.log(result1.originalname,"original NAME");
-				}
-                  
-				
-			})
-			//console.log(result);
-			
-		}
 		return res.status(200).render("dashboard", {title: 'Welcome to your File Manager!!' , message: "LoggedIn Successfully as "+foundUser.firstname+" "+foundUser.lastname+"("+foundUser.username+")."});
 
-})
 	})
 });
 
@@ -201,7 +182,6 @@ router.post('/register', function(req, res){
 
 	var newUser = new User();
 	newUser.username = username;
-	password = bcrypt.hashSync(password,10);
 	newUser.password = password;
 	newUser.firstname = firstname;
 	newUser.lastname = lastname;
@@ -209,7 +189,7 @@ router.post('/register', function(req, res){
 	newUser.save(function(err, savedUser){
 		if (err){
 			console.log("error in registering");
-			return res.status(500).send("User could not be registered.");
+			res.render('registerform',{title:"Welcome to your file manager",msg: "This username is not available"});
 		}
 		//`	console.log(savedUser);
 		req.session.user=savedUser;
@@ -272,7 +252,7 @@ router.post('/uploadFolder',upload.any('myFiles'),(req,res)=>{
 	});
 	
 });
-router.get('/loggout', (req, res, next) => {
+router.get('/logout', (req, res, next) => {
     // Check if the session is exist
     if(req.session.user) {
         // destroy the session and redirect the user to the index page.
@@ -337,6 +317,22 @@ router.get('/DeleteFolder/:folderId',(req,res,next)=>{
 
 		}
 		else{
+			var arr1=[]
+			for(i=0;i<folder.files.length;i++){
+				arr1[i]=folder._doc.files[i];
+				//console.log(result._doc);
+				File.findOne({originalname: arr1[i].originalname},function(error,file){
+                 if(error){
+					 console.log(error);
+				 }
+				 if(file){
+					 file.remove();
+				 }
+				 else{
+					 console.log("file not found");
+				 }
+				})
+			}
 			folder.remove();
 			res.redirect('/Folders');
 		}
@@ -400,4 +396,100 @@ router.post('/search',function(req,res,next){
 })
 		
 })
+router.get('/resetPass',function(req,res,next){
+	if(req.session.user){
+		res.render('resetPass',{msg:""});
+	}
+	else{
+		res.redirect('/');
+	}
+})
+router.post('/resetPassword',(req,res,next)=>{
+	if(req.body.currentPass==req.session.user.password){
+		if(req.body.newPass==req.body.confirmNewPass){
+			User.findOne({username: req.session.user.username}, function(error,user){
+				if(error){
+					console.log(error);
+				}
+				else{
+					user.password=req.body.newPass;
+					user.save(function(error,user1){
+						if(error){
+							console.log(error);
+						}
+						else{
+							console.log(user1);
+						}
+					});
+				}
+				res.render('resetPass',{msg:"Password changed successfully!"})
+			})
+		}
+		else{
+			res.render('resetPass',{msg:"New Password and Confirm New Password did not match! Please Try Again"})
+		}
+	}
+	else{
+		res.render('resetPass',{msg:"Current Password is not correct! Please Try Again"})
+	}
+	
+})
+router.get('/delUser', function(req, res){
+	
+	var username = req.session.user.username;
+	var password = req.session.user.password;
+	//console.log(username);
+
+	User.findOne({username : username, password : password}, function(err, foundUser){
+		//console.log(username);
+		if(err){
+			console.log("Error - login : ");
+			return res.status(500).send("There was some error");
+		}
+
+		if(!foundUser){
+			return res.status(404).send("User not found");
+		}
+		Folder.find({username: foundUser.username},function(error,folder){
+			if(error){
+				console.log(error);
+			}
+			else{
+				for(j=0;j<folder.length;j++){
+			        var arr1=[]
+			for(i=0;i<folder[j].files.length;i++){
+				arr1[i]=folder[j]._doc.files[i];
+				//console.log(result._doc);
+				File.findOne({originalname: arr1[i].originalname},function(error,file){
+                 if(error){
+					 console.log(error);
+				 }
+				 if(file){
+					 file.remove();
+				 }
+				 else{
+					 console.log("file not found");
+				 }
+				})
+			}
+			folder[j].remove();
+		}
+			}
+		})
+		File.find({username: foundUser.username},function(error,file){
+			if(error){
+				console.log(error);
+			}
+			else{
+				for(i=0;i<file.length;i++){
+					file[i].remove();
+				}
+			}
+		})
+		foundUser.remove();
+		//console.log(req.session.user);
+		req.session.destroy();
+		res.render('index', { title: 'Welcome to your File Manager!!',msg:"User Account Deleted" });
+	})
+});
 module.exports = router;
