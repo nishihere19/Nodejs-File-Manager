@@ -1,0 +1,14 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    nav 
+      ui 
+        block links
+        ul 
+            a(href="/" style="margin:5px;") Home
+    block.main= main-content
+    block.content= content
+    mixin
