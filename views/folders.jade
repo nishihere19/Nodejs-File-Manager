@@ -1,10 +1,24 @@
-extends dashboard
+extends layout
+nav
+  block nav 
+      ul(style="float: left;")
+        li
+          a(href='/') Home
 block content
-    mixin
+    .any
         table
             each item in result
                 tr
-                    td 
-                        span 
+                    td
                         a(href="FilesView/"+item._id style="float: left; font-weight: bold;") #{item.originalname}
-                        a(href="DeleteFolder/"+item._id style="float: right; font-weight: bold;") Delete Folder
+                        //a(href="DeleteFolder/"+item._id style="float: right; font-weight: bold;") Delete Folder
+                    td.options
+                        ul
+                            li
+                                a(href="/Folders") >>
+                                ul.submenu
+                                    li
+                                        a(href="/addfiles/"+item._id style=" font-weight: bold;") Add Files
+                                    li
+                                        a(href="DeleteFolder/"+item._id style="float: right; font-weight: bold;") Delete Folder
+                                    

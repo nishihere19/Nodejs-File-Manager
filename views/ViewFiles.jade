@@ -1,6 +1,11 @@
-extends dashboard
+extends layout
+.nav
+  block nav 
+      ul(style="float: left;")
+        li
+          a(href='/') Home
 block content
-    mixin
+    .any
         table
             each item in result1
                 tr

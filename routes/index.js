@@ -12,6 +12,7 @@ var upload = multer({
 	dest:'./uploads'
 })
 
+
 router.get('/', function(req, res, next) {
 	
 	var file=[]
@@ -24,6 +25,45 @@ router.get('/', function(req, res, next) {
 	}
 	
 });
+router.get('/autocomplete',function(req,res,next){
+	//console.log(data);
+	var regex = new RegExp(req.query["term"],'i');
+	var user=File.find({user: req.session.user._id,originalname: regex}).sort({"updated_at":-1}).sort({"created":-1});
+	user.exec(function(err,data){
+		console.log(data);
+		var arr=[]
+		if(err){
+			console.log(err);
+		}
+		if(data){
+			data.forEach(user1 => {
+				let obj={
+					id: user1._id,
+					label: user1.originalname
+				}
+				arr.push(obj);
+			});
+			var user2=Folder.find({user: req.session.user._id,originalname: regex}).sort({"updated_at":-1}).sort({"created":-1});
+			user2.exec(function(err,data1){
+				//console.log(data1);
+				if(err){
+					console.log(err);
+				}
+				if(data1){
+					data1.forEach(user2=>{
+						let obj={
+							if: user2._id,
+							label:user2.originalname
+						}
+						arr.push(obj);
+					})
+				}
+			});
+			res.jsonp(arr);
+			
+		}
+	})
+})
 
 /* GET loginform */
 router.get('/loginform', function(req, res, next){
@@ -35,7 +75,7 @@ router.get('/registerform', function(req, res, next){
 	res.render('registerform', { title: 'Welcome to your File Manager!!' });
 })
 router.get('/Files',function(req,res,next){
-	File.find({username: req.session.user.username},function(err,result){
+	File.find({users: req.session.user._id},function(err,result){
 		var arr=[]
 		for(i=0;i<result.length;i++){
 			arr[i]=result[i]._doc;
@@ -46,7 +86,7 @@ router.get('/Files',function(req,res,next){
 	})
 })
 router.get('/Folders',function(req,res,next){
-	Folder.find({username: req.session.user.username},function(err,result){
+	Folder.find({users: req.session.user._id},function(err,result){
 		var arr=[]
 		for(i=0;i<result.length;i++){
 			arr[i]=result[i]._doc;
@@ -59,11 +99,7 @@ router.get('/Folders',function(req,res,next){
 
 router.get('/FilesView/:id',function(req,res,next){
 	folderId=req.params.id;
-	Folder.find({username: req.session.user.username},function(err,result){
-		var arr=[]
-		for(i=0;i<result.length;i++){
-			arr[i]=result[i]._doc;
-		}
+	
 		//console.log(arr);
 		//res.render('files',{title: 'Welcome to your File Manager!!' , message: "LoggedIn Successfully as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+").", result: arr ,result1=""})
 		Folder.findOne({_id: folderId},function(err,result){
@@ -73,16 +109,15 @@ router.get('/FilesView/:id',function(req,res,next){
 			}
 			else{
 				var arr1=[]
-			for(i=0;i<result.files.length;i++){
-				arr1[i]=result._doc.files[i];
-				//console.log(result._doc);
-			}
-			if(arr1.length){
-				res.render('ViewFiles',{title: 'Welcome to your File Manager!!' , message: "LoggedIn Successfully as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+").",result1: arr1,id: folderId })
+
+				console.log(result._doc.files);
+		
+			if(result._doc.files.length){
+				res.render('ViewFiles',{result1: result._doc.files,id: folderId })
 		
 			}
 			else{
-				res.render('ViewFiles',{title: 'Welcome to your File Manager!!' , message: "LoggedIn Successfully as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+").",result1: " " , id: folderId})
+				res.render({result1: " " , id: folderId})
 		
 			}
 			
@@ -91,7 +126,7 @@ router.get('/FilesView/:id',function(req,res,next){
 		})
 	})
 	
-})
+
 router.get('/Files/:file_id',function(req,res,next){
 	docId=req.params.file_id;
 	var getFile=new File;
@@ -207,7 +242,7 @@ router.get('/dashboard', function(req, res){
 });
 router.post('/uploadFile',upload.single('myFile'),(req,res)=>{
 	var newfile = new File(req.file);
-	newfile.username= req.session.user.username;
+	newfile.users.push(req.session.user._id);
 	//console.log(file);
 	console.log(newfile);
 
@@ -216,30 +251,29 @@ router.post('/uploadFile',upload.single('myFile'),(req,res)=>{
 			console.log(err);
 			return res.status(500).send("File could not be saved.");
 		}
-		console.log(saveFile);
+		User.update({_id:req.session.user._id},{$addToSet:{"files": saveFile._id}},function(err,result){
+			if(err) console.log(err);
+			else{
+				console.log(result);
+				console.log(saveFile);
 		return res.status(200).render("dashboard", {title: 'Welcome to your File Manager!!' , message: "Registered Successfully"});
-	});
+
+			}
+		})
+			});
 	
 });
 router.post('/uploadFolder',upload.any('myFiles'),(req,res)=>{
 	var newfolder = new Folder();
 	newfolder.originalname=req.body.nameOfFolder;
-	newfolder.username= req.session.user.username;
+	newfolder.users.push(req.session.user._id);
 	//newfolder.files=req.files;
 	//console.log(file);
 	var arr=[];
 	for(i=0;i<req.files.length;i++){
-		arr[i]=new File(req.files[i]);
-		arr[i].save(function(err,file){
-			if(err){
-				console.log(error);
-			}
-			else{
-				console.log("File saved");
-			}
-		})
+		newfolder.files.push(req.files[i])
 	}
-	newfolder.files=arr;
+	
 	console.log(newfolder.originalname,"OriginalName");
 
 	newfolder.save(function(err, saveFolder){
@@ -248,8 +282,16 @@ router.post('/uploadFolder',upload.any('myFiles'),(req,res)=>{
 			return res.status(500).send("Folder could not be saved.");
 		}
 		//console.log(saveFolder);
-		return res.status(200).render("dashboard", {title: 'Welcome to your File Manager!!' , message: "Registered Successfully"});
-	});
+		User.update({_id: req.session.user._id},{$addToSet:{"folders": saveFolder._id}},function(err,result){
+			if(err) console.log(err);
+			else{
+				console.log(saveFolder._doc.files);
+				return res.status(200).render("dashboard", {title: 'Welcome to your File Manager!!' , message: "Registered Successfully"});
+	
+
+			}
+		})
+		});
 	
 });
 router.get('/logout', (req, res, next) => {
@@ -279,13 +321,6 @@ router.get('/DeleteFile/:fileId',(req,res,next)=>{
 router.get('/FilesView/DeleteFile/:fileId/:folderId',(req,res,next)=>{
 	id=req.params.fileId;
 	fId=req.params.folderId;
-	File.findOne({filename: id},function(error,file){
-		if(error){
-			console.log(error);
-			res.render('error');
-
-		}
-		else{
 			Folder.findOne({_id: folderId},(error,result)=>{
 				if(error){
 					console.log(error);
@@ -293,20 +328,19 @@ router.get('/FilesView/DeleteFile/:fileId/:folderId',(req,res,next)=>{
 				}
 				else{
 					for(i=0;i<result._doc.files.length;i++){
-						console.log(file.filename,result._doc.files[i].filename);
-						if(file.filename==result._doc.files[i].filename){
+						console.log(result._doc.files[i].filename);
+						if(id==result._doc.files[i].filename){
 							result._doc.files.splice(i,1);
 							result.save();
 							//console.log(result._doc.files);
 						}
 					}
-					file.remove();
+					
 
 				}
 			})
 			res.redirect('/Folders');
-		}
-	})
+		
 })
 router.get('/DeleteFolder/:folderId',(req,res,next)=>{
 	id=req.params.folderId;
@@ -346,7 +380,7 @@ router.post('/search',function(req,res,next){
 	string= string.toLowerCase();
 	console.log(string);
 	var folders=[], files=[];
-	Folder.find({username: req.session.user.username},function(error,result){
+	Folder.find({user: req.session.user._id},function(error,result){
 		if(error){
 			console.log(error);
 		}
@@ -358,7 +392,7 @@ router.post('/search',function(req,res,next){
 		}
 		
 	
-	File.find({username: req.session.user.username},function(error,result1){
+	File.find({user: req.session.user._id},function(error,result1){
 		if(error){
 			console.log(error);
 			res.render('error');
@@ -492,4 +526,23 @@ router.get('/delUser', function(req, res){
 		res.render('index', { title: 'Welcome to your File Manager!!',msg:"User Account Deleted" });
 	})
 });
+router.get('/addfiles/:id',(req,res,next)=>{
+var id=req.params.id;
+res.render('addfiles',{folderid:id});
+})
+router.post('/addfiles/:id',upload.any('myFiles'),function(req,res,next){
+	var id=req.params.id;
+	//console.log(req.files);
+	for(i=0;i<req.files.length;i++){
+		Folder.update({_id:id},{$addToSet:{"files":req.files[i]}},function(err,result){
+			if(err) console.log(err);
+			else{
+	
+				console.log(result,"Files Added");
+				res.render('dashboard',{message:"Files Added Successfully!"});
+			}
+		})
+	}
+	
+})
 module.exports = router;

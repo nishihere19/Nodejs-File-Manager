@@ -1,0 +1,13 @@
+extends layout
+nav
+  block nav 
+      ul
+        li
+          a(href='/' ) Home
+        li
+          a(href="/Folders") Back
+block content
+  .any   
+    form(method="post" enctype="multipart/form-data" action="/addfiles/"+folderid).folder
+      input(type="file", name="myFiles" multiple)
+      input(type="submit", value="Upload")

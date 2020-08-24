@@ -1,11 +1,24 @@
-extends dashboard
+extends layout
+.nav
+  block nav 
+      ul
+        li
+          a(href='/') Home
 block content
-    mixin
+    .any
         table
             each item in result
                 tr
                     td 
                         a(href="Files/"+item._id style="float: left; font-weight: bold;") #{item.originalname}
-                        a(href="DeleteFile/"+item._id style="float: right; font-weight: bold;") Delete
+                        
                         //div hi
+                    td.options
+                        ul
+                            li
+                                a(href="/Files") >>
+                                ul.submenu
+                                    li
+                                        a(href="DeleteFile/"+item._id style=" font-weight: bold;") Delete
+                                    
                        
