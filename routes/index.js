@@ -7,6 +7,7 @@ const Folder = require('../lib/folders');
 const user=new User;
 const bcrypt=require('bcrypt');
 const folders = require('../lib/folders');
+const ObjectId= require('mongodb').ObjectID;
 
 var upload = multer({
 	dest:'./uploads'
@@ -18,10 +19,10 @@ router.get('/', function(req, res, next) {
 	var file=[]
 	if(req.session.user){
 		
-		res.render('dashboard',{ title: 'Welcome to your File Manager!!', message: "LoggedIn Successfully as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+")."});
+		res.render('dashboard',{ message: "LoggedIn as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+")."});
 	}
 	else{
-		res.render('index', { title: 'Welcome to your File Manager!!',msg:'' });
+		res.render('index');
 	}
 	
 });
@@ -67,21 +68,22 @@ router.get('/autocomplete',function(req,res,next){
 
 /* GET loginform */
 router.get('/loginform', function(req, res, next){
-	res.render('loginform', { title: 'Welcome to your File Manager!!' });
+	res.render('loginform');
 })
 
 /* GET registration form */
 router.get('/registerform', function(req, res, next){
-	res.render('registerform', { title: 'Welcome to your File Manager!!' });
+	res.render('registerform');
 })
 router.get('/Files',function(req,res,next){
-	File.find({users: req.session.user._id},function(err,result){
+	File.find({users: {$in :[req.session.user._id]}},function(err,result){
 		var arr=[]
+
 		for(i=0;i<result.length;i++){
 			arr[i]=result[i]._doc;
 		}
-		//console.log(arr);
-		res.render('files',{title: 'Welcome to your File Manager!!' , message: "LoggedIn Successfully as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+").", result: arr })
+		//console.log(result);
+		res.render('files',{ result: arr })
 
 	})
 })
@@ -92,7 +94,7 @@ router.get('/Folders',function(req,res,next){
 			arr[i]=result[i]._doc;
 		}
 		//console.log(arr);
-		res.render('folders',{title: 'Welcome to your File Manager!!' , message: "LoggedIn Successfully as "+req.session.user.firstname+" "+req.session.user.lastname+"("+req.session.user.username+").", result: arr ,result1:" "})
+		res.render('folders',{ result: arr ,result1:" "})
 
 	})
 })
@@ -228,7 +230,7 @@ router.post('/register', function(req, res){
 		}
 		//`	console.log(savedUser);
 		req.session.user=savedUser;
-		return res.status(200).render("dashboard", {title: 'Welcome to your File Manager!!' , message: "Registered Successfully"});
+		return res.status(200).render("dashboard", { message: "Registered Successfully"});
 	});
 });
 
@@ -305,14 +307,45 @@ router.get('/logout', (req, res, next) => {
 });
 router.get('/DeleteFile/:fileId',(req,res,next)=>{
 	id=req.params.fileId;
-	File.findOne({_id: id},function(error,file){
+	File.find({_id: id},function(error,file){
 		if(error){
 			console.log(error);
 			res.render('error');
 
 		}
 		else{
-			file.remove();
+			if(file[0]._doc.users.length>1){
+				File.update({_id: id},{$pull: {"users": req.session.user._id}},function(err,result){
+					if(err) console.log(err);
+					else{
+						User.update({_id: req.session.user._id},{$pull:{"files": file[0]._id}},(err,data)=>{
+							if(err) console.log(err);
+					else{
+						console.log(data);
+
+
+					}
+						})
+						console.log(result);
+					}
+				})
+			}
+			else{
+				User.update({_id: req.session.user._id},{$pull:{"files": file[0]._id}},(err,data)=>{
+					if(err) console.log(err);
+			else{
+					console.log(data);
+				
+			}
+				})
+				File.deleteOne({_id: id},function(err,result){
+					if(err) console.log(err);
+					else{
+						console.log(result);
+						
+					}
+				})
+			}
 
 			res.redirect('/Files');
 		}
@@ -351,22 +384,6 @@ router.get('/DeleteFolder/:folderId',(req,res,next)=>{
 
 		}
 		else{
-			var arr1=[]
-			for(i=0;i<folder.files.length;i++){
-				arr1[i]=folder._doc.files[i];
-				//console.log(result._doc);
-				File.findOne({originalname: arr1[i].originalname},function(error,file){
-                 if(error){
-					 console.log(error);
-				 }
-				 if(file){
-					 file.remove();
-				 }
-				 else{
-					 console.log("file not found");
-				 }
-				})
-			}
 			folder.remove();
 			res.redirect('/Folders');
 		}
@@ -484,39 +501,38 @@ router.get('/delUser', function(req, res){
 		if(!foundUser){
 			return res.status(404).send("User not found");
 		}
-		Folder.find({username: foundUser.username},function(error,folder){
+		Folder.find({users:foundUser._id},function(error,folder){
 			if(error){
 				console.log(error);
 			}
 			else{
 				for(j=0;j<folder.length;j++){
-			        var arr1=[]
-			for(i=0;i<folder[j].files.length;i++){
-				arr1[i]=folder[j]._doc.files[i];
-				//console.log(result._doc);
-				File.findOne({originalname: arr1[i].originalname},function(error,file){
-                 if(error){
-					 console.log(error);
-				 }
-				 if(file){
-					 file.remove();
-				 }
-				 else{
-					 console.log("file not found");
-				 }
-				})
-			}
 			folder[j].remove();
 		}
 			}
 		})
-		File.find({username: foundUser.username},function(error,file){
+		File.find({users:{$in:[foundUser._id]}},function(error,file){
 			if(error){
 				console.log(error);
 			}
 			else{
 				for(i=0;i<file.length;i++){
-					file[i].remove();
+					if(file[i]._doc.users.length>1){
+						File.update({_id:file._id},{$pull:{"users":foundUser._id}},function(err,result2){
+							if(err) console.log(err);
+							else{
+								console.log(result2);
+							}
+						})
+					}
+					else{
+						File.deleteOne({_id:file._id},(err,result2)=>{
+							if(err) console.log(err);
+							else{
+								console.log(result2);
+							}
+						})
+					}
 				}
 			}
 		})
@@ -544,5 +560,219 @@ router.post('/addfiles/:id',upload.any('myFiles'),function(req,res,next){
 		})
 	}
 	
+})
+router.get('/move/:id',function(req,res){
+   let	id=req.params.id;
+   Folder.find({users: req.session.user._id},function(err,result1){
+	   if(err) console.log(err);
+	   else{
+		   var arr=[];
+		   //console.log(result1);
+		   for(i=0;i<result1.length;i++){
+			   arr[i]=result1[i]._doc;
+		   }
+		   if(arr.length){
+			res.render('Moveto',{id:id,result: arr,msg: "Select the folder where the file is to be moved!"});
+		   }
+		   else{
+			   res.render('Moveto',{id:id,msg:"Sorry there's no folder where files can be moved!",result: arr});
+		   }
+	   }
+   })
+})
+router.get('/moveto/:folderid/:fileid',function(req,res,next){
+	var fileid= req.params.fileid;
+	var folderid= req.params.folderid;
+	console.log(req.params);
+	File.findById({_id:fileid},(err,result)=>{
+		if(err) console.log(err);
+		else{
+			console.log('File to be moved is found!');
+			var file=result._doc;
+			if(result._doc.users.length>1){
+				File.update({_id:fileid},{$pull:{"users":req.session.user._id}},(err,result1)=>{
+					if(err) console.log(err);
+					else{
+						console.log(result1);
+						Folder.findByIdAndUpdate({_id:folderid},{$addToSet:{"files" :file}},(err,result)=>{
+							if(err) console.log(err);
+							else{
+								console.log(result,"File Moved!");
+								res.redirect('/Files');
+							}
+						})
+					}
+				})
+			}
+			else{
+				File.deleteOne({_id:fileid},(err,result)=>{
+					if(err) console.log(err);
+					else{
+						console.log("File deleted!");
+						Folder.findByIdAndUpdate({_id:folderid},{$addToSet:{"files" :file}},(err,result)=>{
+							if(err) console.log(err);
+							else{
+								console.log(result,"File Moved!");
+								res.redirect('/Files');
+							}
+						})
+					}
+				});
+			}
+			
+		}
+		});
+			
+					
+				
+	
+	
+	
+})
+router.get('/send/:id',function(req,res){
+	var	id=req.params.id;
+	res.render('send',{id:id,msg: "Enter the username with whom the file is to be shared!"});
+ });
+ router.post('/sendto/:fileid',function(req,res,next){
+
+	 fileid= req.body.id;
+	 console.log(req.body);
+	 user1=req.body.Searchval;
+	 let file=File.findById({_id:fileid},(err,result)=>{
+		 if(err) console.log(err);
+		 else{
+			User.find({username: user1},(err,result1)=>{
+				if(err) console.log(err);
+				else{
+					if(result1){
+						//result._doc.users.push(result1[0]._id);
+						console.log(result._doc.users);
+						
+						User.findByIdAndUpdate({_id:result1[0]._id},{$addToSet:{"files": result._id}},(err,data)=>{
+							if(err) console.log(err);
+							else{
+								//console.log(data);
+								File.update({_id: result._id},{$addToSet: {users: result1[0]._id}},(err,final)=>{
+									if(err) console.log(err);
+									else{
+										console.log('File shared');
+									  res.redirect('/Files');
+									  console.log(result._doc.users);
+									}
+								})
+								
+							}
+						})
+					}
+				}
+			})
+			 
+		 }
+	 });
+	 
+	 
+ })
+ router.get('/movefile/:filename/:folderid',(req,res)=>{
+	 var filename=req.params.filename;
+	 var folderid=req.params.folderid;
+	 Folder.find({users:req.session.user._id},function(err,result){
+		 if(err) console.log(err);
+		 else{
+			 var arr=[];
+			 for(i=0;i<result.length;i++){
+				 if(result[i]._id!=folderid){
+					arr[i]=result[i]._doc;
+				 }
+				
+			 }
+			 if(arr.length){
+				 console.log(filename);
+				res.render('MoveFileTo',{fileid:filename,folderid:folderid,result:arr,msg:"Select Where to Move Files!"});
+			 }
+			 else{
+				 res.render('MoveFileTo',{filename:filename,folderid:folderid,result:"",msg:"No Folders available!"});
+			 }
+		 }
+	 })
+	 
+ })
+ router.get('/movefileto/:destid/:filename/:originid',function(req,res){
+	 destFolderid=req.params.destid;
+	 filename=req.params.filename;
+	 originid=req.params.originid;
+	 Folder.findById({_id:originid},(err,folder)=>{
+		 if(err) console.log(err);
+		 else{
+			 var file;
+			 for(i=0;i<folder._doc.files.length;i++){
+				 if(filename==folder._doc.files[i].filename){
+					 file=folder._doc.files[i];
+					 Folder.findByIdAndUpdate({_id:originid},{$pull:{"files":folder._doc.files[i]}},(err,result1)=>{
+						if(err) console.log(err);
+		 				else{ 
+							console.log(result1);
+							Folder.update({_id:destFolderid},{$addToSet:{"files":file}},(err,result2)=>{
+								if(err) console.log(err);
+								else{
+									console.log(result2);
+									res.redirect('/Folders');
+								}
+							})
+						 }
+					 })
+				 }
+			 }
+		 }
+	 })
+ })
+router.get('/sendfile/:filename/:folderid', (req,res)=>{
+	fileid=req.params.filename;
+	folderid=req.params.folderid;
+	res.render('sendFromFolder',{fileid:fileid,id:folderid,msg:"Enter the username of the user you want to share file to!"});
+
+})
+router.post('/sendfromfolder',(req,res)=>{
+fileid=req.body.fileid;
+console.log(fileid,"filename",req.body);
+folderid=req.body.id;
+username=req.body.Searchval;
+User.findOne({username:username},(err,user1)=>{
+	if(err) console.log(err);
+	if(!user1){
+		res.render('dashboard',{message:"User Not Found!"});
+	}
+	else{
+		Folder.findById({_id:folderid},(err,folder)=>{
+			if(err) console.log(err);
+			else{
+				//console.log(folder,"folder");
+				for(i=0;i<folder._doc.files.length;i++){
+					console.log(folder._doc.files[i],"file");
+					if(folder._doc.files[i].filename==fileid){
+						console.log(folder._doc.files[i],"fileMatch");
+						var myfile=new File(folder._doc.files[i]);
+						
+				}
+			}
+						myfile.users.push(user1._id);
+						myfile.save(function(err,saved){
+							if(err) console.log(err);
+							else{
+								console.log(saved);
+								User.update({_id:user1._id},{$addToSet:{"files": saved}},function(err,result){
+									if(err) console.log(err);
+									else{
+										console.log(result);
+										res.render('dashboard',{message:"File Shared Successfully!"});
+									}
+								})
+							}
+						})
+					}
+		})
+		
+
+	}
+})
 })
 module.exports = router;

@@ -4,11 +4,7 @@ extends layout
       ul.main-menu
         li
           a(href='/') Home
-        
-        li 
-          form(action="/search", method="post")
-            input(type="text", name="Searchval", placeholder="Search Files/Folders")
-            input(type="submit", name="Search", value="Search")
+
 block content
   .any
     form(action="/resetPassword", method="post" )

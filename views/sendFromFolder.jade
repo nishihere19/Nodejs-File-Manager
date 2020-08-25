@@ -1,0 +1,13 @@
+extends layout
+.nav
+  block nav 
+      ul(style="float: left;")
+        li
+          a(href='/') Home
+block content
+    .any #{msg}
+        form(action="/sendfromfolder", method="post")
+            input(type="text", name="Searchval",id="searchbar" ,placeholder="Enter Username Of The User")
+            input(type="text", value=id name="id" style="display: none;")
+            input(type="text", value=fileid name="fileid" style="display: none;")
+            input(type="submit", name="Share",id={id} value="Share")

@@ -26,7 +26,7 @@ extends layout
 
 block main-content
   .any
-    h1.title #{title}
+    //h1.title #{title}
     p.msg #{message}
     form(method="post" enctype="multipart/form-data" action="/uploadFile").file
       input(type="file", name="myFile")
